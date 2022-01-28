@@ -12,6 +12,8 @@ require 'zlib'
 
 suffix = case RbConfig::CONFIG['host_os']
          when /linux/
+           host_cpu = RbConfig::CONFIG['host_cpu']
+
            os = `. /etc/os-release 2> /dev/null && echo ${ID}_${VERSION_ID}`.strip
 
            os = 'ubuntu_16.04' if os.start_with?('ubuntu_16.') ||
@@ -38,11 +40,13 @@ suffix = case RbConfig::CONFIG['host_os']
            os = 'debian_9' if os_based_on_debian_9
 
            os = 'debian_10' if !os_based_on_debian_9 && os.start_with?('debian')
+           architecture ||= 'arm64' if os == 'debian_10' &&
+                                       (host_cpu == 'arm64' || host_cpu == 'aarch64' || host_cpu == 'arch64')
 
            os = 'archlinux' if os.start_with?('arch_') ||
                                os.start_with?('manjaro_')
 
-           architecture = RbConfig::CONFIG['host_cpu'] == 'x86_64' ? 'amd64' : 'i386'
+           architecture ||= host_cpu == 'x86_64' ? 'amd64' : 'i386'
 
            "#{os}_#{architecture}"
          when /darwin/
